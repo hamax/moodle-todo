@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import urllib, urllib2
 from datetime import datetime
 
@@ -23,7 +24,11 @@ urllib2.install_opener(o)
 # login and get list of courses
 p = urllib.urlencode({'username': USERNAME, 'password': PASSWORD})
 doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/index.php',  p).read())
-courses = [(a.text, dict(a.attrs)['href']) for a in doc.find('h2', text = ['My courses', 'Moji predmeti']).findNext('ul', 'list').findAll('a')]
+doc = doc.find('h2', text = ['My courses', 'Moji predmeti'])
+if not doc:
+	print 'Wrong username and password combination (probably)'
+	sys.exit()
+courses = [(a.text, dict(a.attrs)['href']) for a in doc.findNext('ul', 'list').findAll('a')]
 
 # generate task list
 tasks = []
@@ -83,5 +88,5 @@ if tasks:
 	print '-' * 70
 	print '%d/%d upcoming tasks done' % (tasks_done, tasks_all)
 else:
-	print 'Whoa, all (%d) tasks done!' % tasks_all
+	print 'Whoa, all (%d) upcoming tasks done!' % tasks_all
 
