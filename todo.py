@@ -9,7 +9,7 @@ USERNAME = '******@student.uni-lj.si'
 PASSWORD = '*****'
 
 def parse_date(date):
-	months = [('januar', 'January')]
+	months = [('januar', 'January'), ('februar', 'February'), ('marec', 'March'), ('maj', 'May'), ('junij', 'June'), ('julij', 'July'), ('avgust', 'August'), ('oktober', 'October')]
 	date = ' '.join(date.split(',')[1:])
 	for month in months:
 		date = date.replace(month[0], month[1])
@@ -22,7 +22,7 @@ urllib2.install_opener(o)
 # login and get list of courses
 p = urllib.urlencode({'username': USERNAME, 'password': PASSWORD})
 doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/index.php',  p).read())
-courses = [(a.text, dict(a.attrs)['href']) for a in doc.find('h2', text = 'My courses').findNext('ul', 'list').findAll('a')]
+courses = [(a.text, dict(a.attrs)['href']) for a in doc.find('h2', text = ['My courses', 'Moji predmeti']).findNext('ul', 'list').findAll('a')]
 
 # generate event list
 events = []
