@@ -23,7 +23,7 @@ urllib2.install_opener(o)
 
 # login and get list of courses
 p = urllib.urlencode({'username': USERNAME, 'password': PASSWORD})
-doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/index.php',  p).read())
+doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/index.php',  p).read().decode('utf8', 'replace'))
 doc = doc.find('h2', text = ['My courses', 'Moji predmeti'])
 if not doc:
 	print 'Wrong username and password combination (probably)'
@@ -37,7 +37,7 @@ tasks_all = 0
 
 for course in courses:
 	# check assigments
-	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/assignment/index.php'),  p).read())
+	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/assignment/index.php'),  p).read().decode('utf8', 'replace'))
 	for assigment in doc.findAll('tr')[1:]: # first is header
 		namefield = assigment.find('td', 'c1')
 		if namefield: # if not its not actually an assigment
@@ -53,7 +53,7 @@ for course in courses:
 					tasks_all += 1
 	
 	# check quizes
-	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/quiz/index.php'),  p).read())
+	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/quiz/index.php'),  p).read().decode('utf8', 'replace'))
 	for assigment in doc.findAll('tr')[1:]: # first is header
 		namefield = assigment.find('td', 'c1')
 		if namefield: # if not its not actually an assigment
@@ -62,7 +62,7 @@ for course in courses:
 				date = parse_date(datefield.text)
 				if date >= datetime.now(): # whtas gone is gone
 					# check if we already solved the quiz
-					doc = BeautifulSoup(o.open(BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href'],  p).read())
+					doc = BeautifulSoup(o.open(BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href'],  p).read().decode('utf8', 'replace'))
 					if not doc.find('table'):
 						tasks.append((date, course[0], namefield.a.text))
 					else:
@@ -78,13 +78,13 @@ if tasks:
 		left = task[0] - datetime.now()
 		if left.days > 0:
 			break
-		print '%.1f hours left:' % (float(left.seconds) / 3600), '%s - %s' % (task[1], task[2])
+		print '%.1f hours left:' % (float(left.seconds) / 3600), '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
 	print '-' * 70
 	for task in tasks:
 		left = task[0] - datetime.now()
 		if left.days == 0:
 			continue
-		print '%d days left:' % left.days, '%s - %s' % (task[1], task[2])
+		print '%d days left:' % left.days, '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
 	print '-' * 70
 	print '%d/%d upcoming tasks done' % (tasks_done, tasks_all)
 else:
