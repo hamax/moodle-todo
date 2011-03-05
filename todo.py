@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import sys
 import urllib, urllib2
 from datetime import datetime
@@ -6,8 +7,8 @@ from datetime import datetime
 from BeautifulSoup import BeautifulSoup
 
 BASE_URL = 'http://ucilnica.fri.uni-lj.si'
-USERNAME = '******@student.uni-lj.si'
-PASSWORD = '*****'
+USERNAME = ''
+PASSWORD = ''
 
 def parse_date(date):
 	months = {'januar':1, 'january':1, 'februar':2, 'february':2, 'marec':3, 'march':3, 'april':4, 'maj':5, 'may':5, 'junij':6, 'june':6, 'julij':7, 'july':7, 'avgust':8, 'august':8, 'september':9, 'oktober':10, 'october':10, 'november':11, 'december':12}
@@ -22,6 +23,24 @@ def parse_date(date):
 	if len(date[1]) > 1 and date[1][1] == 'pm': hour = int(hour) + 12 
 	
 	return datetime(int(year), int(month), int(day), int(hour), int(minute))
+
+# read config
+if not BASE_URL or not USERNAME or not PASSWORD:
+	try:
+		with open(os.environ['HOME'] + '/.moodle-todo.conf') as f:
+			for line in f:
+				field, value = [a.strip() for a in line.split('=')]
+				if field == 'BASE_URL':
+					BASE_URL = value
+				if field == 'USERNAME':
+					USERNAME = value
+				if field == 'PASSWORD':
+					PASSWORD = value
+	except ValueError:
+		pass
+if not BASE_URL or not USERNAME or not PASSWORD:
+	print 'Edit todo.py or ~/.moodle-todo.conf to configure todo'
+	sys.exit()
 
 # build opener
 o = urllib2.build_opener(urllib2.HTTPCookieProcessor())
