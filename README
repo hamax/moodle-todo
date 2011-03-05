@@ -1,0 +1,11 @@
+Simple todo list for moodle
+
+REQUIRES:
+	- python-beautifulsoup
+	- python-dateutil
+
+INSTALLATION:
+	- download https://github.com/hamax/moodle-todo/blob/master/todo.py
+	- set USERNAME and PASSWORD in todo.py
+	- (optional) place it in /bin/ and chmod +x it
+
