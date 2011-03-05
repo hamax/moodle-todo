@@ -4,18 +4,24 @@ import urllib, urllib2
 from datetime import datetime
 
 from BeautifulSoup import BeautifulSoup
-from dateutil.parser import parse
 
 BASE_URL = 'http://ucilnica.fri.uni-lj.si'
 USERNAME = '******@student.uni-lj.si'
 PASSWORD = '*****'
 
 def parse_date(date):
-	months = [('januar', 'January'), ('februar', 'February'), ('marec', 'March'), ('maj', 'May'), ('junij', 'June'), ('julij', 'July'), ('avgust', 'August'), ('oktober', 'October')]
-	date = ' '.join(date.split(',')[1:])
-	for month in months:
-		date = date.replace(month[0], month[1])
-	return parse(date)
+	months = {'januar':1, 'january':1, 'februar':2, 'february':2, 'marec':3, 'march':3, 'april':4, 'maj':5, 'may':5, 'junij':6, 'june':6, 'julij':7, 'july':7, 'avgust':8, 'august':8, 'september':9, 'oktober':10, 'october':10, 'november':11, 'december':12}
+	
+	date = [a.strip().split(' ') for a in date.lower().split(',')[1:]]
+	
+	day = date[0][0].replace('.', '')
+	month = months[date[0][1]]
+	year = date[0][2]
+	
+	hour, minute = date[1][0].split(':')
+	if len(date[1]) > 1 and date[1][1] == 'pm': hour = int(hour) + 12 
+	
+	return datetime(int(year), int(month), int(day), int(hour), int(minute))
 
 # build opener
 o = urllib2.build_opener(urllib2.HTTPCookieProcessor())
@@ -44,7 +50,7 @@ for course in courses:
 			datefield = assigment.find('td', 'c3')
 			if datefield.text.strip() != '-': # if there is due date
 				date = parse_date(datefield.text)
-				if date >= datetime.now(): # whtas gone is gone
+				if date >= datetime.now(): # whats gone is gone
 					submittedfield = assigment.find('td', 'c4')
 					if not submittedfield.find('span'): # if not already submitted
 						tasks.append((date, course[0], namefield.a.text))
@@ -60,7 +66,7 @@ for course in courses:
 			datefield = assigment.find('td', 'c2')
 			if datefield.text.strip() != '-': # if there is due date
 				date = parse_date(datefield.text)
-				if date >= datetime.now(): # whtas gone is gone
+				if date >= datetime.now(): # whats gone is gone
 					# check if we already solved the quiz
 					doc = BeautifulSoup(o.open(BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href'],  p).read().decode('utf8', 'replace'))
 					if not doc.find('table'):
