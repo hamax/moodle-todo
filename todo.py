@@ -83,7 +83,7 @@ for course in courses:
 		namefield = assigment.find('td', 'c1')
 		if namefield: # if not its not actually an assigment
 			datefield = assigment.find('td', 'c2')
-			if datefield.text.strip() != '-': # if there is due date
+			if datefield.text.strip() not in ['-', '']: # if there is due date
 				date = parse_date(datefield.text)
 				if date >= datetime.now(): # whats gone is gone
 					# check if we already solved the quiz
