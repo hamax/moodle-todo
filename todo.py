@@ -36,7 +36,7 @@ if not BASE_URL or not USERNAME or not PASSWORD:
 					USERNAME = value
 				if field == 'PASSWORD':
 					PASSWORD = value
-	except ValueError:
+	except:
 		pass
 if not BASE_URL or not USERNAME or not PASSWORD:
 	print 'Edit todo.py or ~/.moodle-todo.conf to configure todo'
@@ -88,7 +88,7 @@ for course in courses:
 				if date >= datetime.now(): # whats gone is gone
 					# check if we already solved the quiz
 					doc = BeautifulSoup(o.open(BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href'],  p).read().decode('utf8', 'replace'))
-					if not doc.find('table'):
+					if not doc.find('td', 'c0'):
 						tasks.append((date, course[0], namefield.a.text))
 					else:
 						tasks_done += 1
