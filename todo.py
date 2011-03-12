@@ -104,13 +104,13 @@ if tasks:
 	print '-' * 70
 	for task in tasks:
 		left = task[0] - datetime.now()
-		if left.days > 0:
+		if left.days > 1:
 			break
-		print '%.1f hours left:' % (float(left.seconds) / 3600), '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
+		print '%.1f hours left:' % (left.days * 24 + float(left.seconds) / 3600), '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
 	print '-' * 70
 	for task in tasks:
 		left = task[0] - datetime.now()
-		if left.days == 0:
+		if left.days <= 1:
 			continue
 		print '%d days left:' % left.days, '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
 	print '-' * 70
