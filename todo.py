@@ -20,7 +20,10 @@ def parse_date(date):
 	year = date[0][2]
 	
 	hour, minute = date[1][0].split(':')
-	if len(date[1]) > 1 and date[1][1] == 'pm': hour = int(hour) + 12 
+	if len(date[1]) > 1:
+		hour = int(hour)
+		if hour == 12: hour = 0
+		if date[1][1] == 'pm': hour += 12 
 	
 	return datetime(int(year), int(month), int(day), int(hour), int(minute))
 
