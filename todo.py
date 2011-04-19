@@ -9,6 +9,11 @@ from BeautifulSoup import BeautifulSoup
 BASE_URL = 'http://ucilnica.fri.uni-lj.si'
 USERNAME = ''
 PASSWORD = ''
+SHOW_URL = False
+
+for arg in sys.argv[1:]:
+	if arg == '-v' or arg == '--url':
+		SHOW_URL = True
 
 def parse_date(date):
 	months = {'januar':1, 'january':1, 'februar':2, 'february':2, 'marec':3, 'march':3, 'april':4, 'maj':5, 'may':5, 'junij':6, 'june':6, 'julij':7, 'july':7, 'avgust':8, 'august':8, 'september':9, 'oktober':10, 'october':10, 'november':11, 'december':12}
@@ -93,7 +98,8 @@ for course in courses:
 					if date >= datetime.now(): # whats gone is gone
 						submittedfield = assigment.find('td', 'c%d' % c_submittedfield)
 						if not submittedfield.find('span'): # if not already submitted
-							tasks.append((date, course[0], namefield.a.text))
+							url = BASE_URL + '/mod/assignment/' + dict(namefield.a.attrs)['href']
+							tasks.append((date, course[0], namefield.a.text, url))
 						else:
 							tasks_done += 1
 						tasks_all += 1
@@ -123,9 +129,10 @@ for course in courses:
 					date = parse_date(datefield.text)
 					if date >= datetime.now(): # whats gone is gone
 						# check if we already solved the quiz
-						doc = BeautifulSoup(o.open(BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href'],  p).read().decode('utf8', 'replace'))
+						url = BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href']
+						doc = BeautifulSoup(o.open(url,  p).read().decode('utf8', 'replace'))
 						if not doc.find('td', 'c0'):
-							tasks.append((date, course[0], namefield.a.text))
+							tasks.append((date, course[0], namefield.a.text, url))
 						else:
 							tasks_done += 1
 						tasks_all += 1
@@ -140,12 +147,14 @@ if tasks:
 		if left.days > 1:
 			break
 		print '%.1f hours left:' % (left.days * 24 + float(left.seconds) / 3600), '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
+		if SHOW_URL: print task[3]
 	print '-' * 70
 	for task in tasks:
 		left = task[0] - datetime.now()
 		if left.days <= 1:
 			continue
 		print '%d days left:' % left.days, '%s - %s' % (task[1].encode('utf8', 'replace'), task[2].encode('utf8', 'replace'))
+		if SHOW_URL: print task[3]
 	print '-' * 70
 	print '%d/%d upcoming tasks done' % (tasks_done, tasks_all)
 else:
