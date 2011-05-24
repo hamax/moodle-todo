@@ -54,9 +54,12 @@ if not BASE_URL or not USERNAME or not PASSWORD:
 o = urllib2.build_opener(urllib2.HTTPCookieProcessor())
 urllib2.install_opener(o)
 
-# login and get list of courses
+# login
 p = urllib.urlencode({'username': USERNAME, 'password': PASSWORD})
 doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/index.php',  p).read().decode('utf8', 'replace'))
+
+# get list of courses
+doc = BeautifulSoup(o.open(BASE_URL + '/index.php',  p).read().decode('utf8', 'replace'))
 doc = doc.find('h2', text = ['My courses', 'Moji predmeti'])
 if not doc:
 	print 'Wrong username and password combination (probably)'
