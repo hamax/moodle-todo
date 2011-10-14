@@ -60,11 +60,11 @@ doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/ind
 
 # get list of courses
 doc = BeautifulSoup(o.open(BASE_URL + '/index.php',  p).read().decode('utf8', 'replace'))
-doc = doc.find('h2', text = ['My courses', 'Moji predmeti'])
+doc = doc.find('span', text = ['My courses', 'Moji predmeti'])
 if not doc:
 	print 'Wrong username and password combination (probably)'
 	sys.exit()
-courses = [(a.text, dict(a.attrs)['href']) for a in doc.findNext('ul', 'list').findAll('a')]
+courses = [(a.text, dict(a.attrs)['href']) for a in doc.findNext('ul').findAll('a')]
 
 # generate task list
 tasks = []
