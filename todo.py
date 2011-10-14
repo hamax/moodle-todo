@@ -3,6 +3,7 @@ import os
 import sys
 import urllib, urllib2
 from datetime import datetime
+from threading import Thread, Lock
 
 from BeautifulSoup import BeautifulSoup
 
@@ -79,11 +80,12 @@ tasks = []
 tasks_done = 0
 tasks_all = 0
 
-for course in courses:
-	if 'course/view.php' not in course[1]:
-		die("Fishy course url", course[1])
+write_lock = Lock()
 
-	# check assigments
+# check assigments
+def check_assigments(course):
+	global tasks_done, tasks_all
+
 	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/assignment/index.php'),  p).read().decode('utf8', 'replace'))
 	
 	table = doc.findAll('tr')
@@ -111,14 +113,18 @@ for course in courses:
 					date = parse_date(datefield.text)
 					if date >= datetime.now(): # whats gone is gone
 						submittedfield = assigment.find('td', 'c%d' % c_submittedfield)
-						if not submittedfield.find('span'): # if not already submitted
-							url = BASE_URL + '/mod/assignment/' + dict(namefield.a.attrs)['href']
-							tasks.append((date, course[0], namefield.a.text, url))
-						else:
-							tasks_done += 1
-						tasks_all += 1
+						with write_lock:
+							if not submittedfield.find('span'): # if not already submitted
+								url = BASE_URL + '/mod/assignment/' + dict(namefield.a.attrs)['href']
+								tasks.append((date, course[0], namefield.a.text, url))
+							else:
+								tasks_done += 1
+							tasks_all += 1
 	
-	# check quizes
+# check quizes
+def check_quizes(course):
+	global tasks_done, tasks_all
+
 	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/quiz/index.php'),  p).read().decode('utf8', 'replace'))
 	
 	table = doc.findAll('tr')
@@ -145,15 +151,32 @@ for course in courses:
 						# check if we already solved the quiz
 						url = BASE_URL + '/mod/quiz/' + dict(namefield.a.attrs)['href']
 						doc = BeautifulSoup(o.open(url,  p).read().decode('utf8', 'replace'))
-						if not doc.find('td', 'c0'):
-							tasks.append((date, course[0], namefield.a.text, url))
-						else:
-							tasks_done += 1
-						tasks_all += 1
+						with write_lock:
+							if not doc.find('td', 'c0'):
+								tasks.append((date, course[0], namefield.a.text, url))
+							else:
+								tasks_done += 1
+							tasks_all += 1
 
-tasks.sort()
+# create threads
+threads = []
+
+for course in courses:
+	if 'course/view.php' not in course[1]:
+		die("Fishy course url", course[1])
 	
+	threads.append(Thread(target = check_assigments, args = [course]))
+	threads.append(Thread(target = check_quizes, args = [course]))
+
+# run and wait
+for thread in threads:
+	thread.daemon = True
+	thread.start()
+for thread in threads:
+	thread.join()
+
 # print tasks
+tasks.sort()
 if tasks:
 	print '-' * 70
 	for task in tasks:
