@@ -15,10 +15,18 @@ for arg in sys.argv[1:]:
 	if arg == '-v' or arg == '--url':
 		SHOW_URL = True
 
-def parse_date(date):
+def die(msg, *args):
+	sys.stderr.write('%s: %s\n' % (msg, ', '.join(args)))
+	sys.stderr.write('Consider reporting this as a bug on github (https://github.com/hamax/moodle-todo/issues)!\n')
+	sys.exit(1)
+
+def parse_date(datein):
 	months = {'januar':1, 'january':1, 'februar':2, 'february':2, 'marec':3, 'march':3, 'april':4, 'maj':5, 'may':5, 'junij':6, 'june':6, 'julij':7, 'july':7, 'avgust':8, 'august':8, 'september':9, 'oktober':10, 'october':10, 'november':11, 'december':12}
 
-	date = [a.strip().split(' ') for a in date.lower().split(',')[1:]]
+	date = [a.strip().split(' ') for a in datein.lower().split(',')[1:]]
+	
+	if date[0][1] not in months:
+		die("Failed to parse date", datein)
 	
 	day = date[0][0].replace('.', '')
 	month = months[date[0][1]]
@@ -28,7 +36,7 @@ def parse_date(date):
 	if len(date[1]) > 1:
 		hour = int(hour)
 		if hour == 12: hour = 0
-		if date[1][1] == 'pm': hour += 12 
+		if date[1][1] == 'pm': hour += 12
 	
 	return datetime(int(year), int(month), int(day), int(hour), int(minute))
 
@@ -48,7 +56,7 @@ if not BASE_URL or not USERNAME or not PASSWORD:
 		pass
 if not BASE_URL or not USERNAME or not PASSWORD:
 	print 'Edit todo.py or ~/.moodle-todo.conf to configure todo'
-	sys.exit()
+	sys.exit(2)
 
 # build opener
 o = urllib2.build_opener(urllib2.HTTPCookieProcessor())
@@ -63,7 +71,7 @@ doc = BeautifulSoup(o.open(BASE_URL + '/index.php',  p).read().decode('utf8', 'r
 doc = doc.find('span', text = ['My courses', 'Moji predmeti'])
 if not doc:
 	print 'Wrong username and password combination (probably)'
-	sys.exit()
+	sys.exit(3)
 courses = [(a.text, dict(a.attrs)['href']) for a in doc.findNext('ul').findAll('a')]
 
 # generate task list
@@ -72,6 +80,9 @@ tasks_done = 0
 tasks_all = 0
 
 for course in courses:
+	if 'course/view.php' not in course[1]:
+		die("Fishy course url", course[1])
+
 	# check assigments
 	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/assignment/index.php'),  p).read().decode('utf8', 'replace'))
 	
