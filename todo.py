@@ -7,7 +7,7 @@ from threading import Thread, Lock
 
 from BeautifulSoup import BeautifulSoup
 
-BASE_URL = 'http://ucilnica.fri.uni-lj.si'
+BASE_URL = 'https://ucilnica.fri.uni-lj.si'
 USERNAME = ''
 PASSWORD = ''
 SHOW_URL = False
@@ -65,7 +65,7 @@ urllib2.install_opener(o)
 
 # login
 p = urllib.urlencode({'username': USERNAME, 'password': PASSWORD})
-doc = BeautifulSoup(o.open(BASE_URL.replace('http://', 'https://') + '/login/index.php',  p).read().decode('utf8', 'replace'))
+doc = BeautifulSoup(o.open(BASE_URL + '/login/index.php',  p).read().decode('utf8', 'replace'))
 
 # get list of courses
 doc = BeautifulSoup(o.open(BASE_URL + '/index.php',  p).read().decode('utf8', 'replace'))
@@ -86,8 +86,12 @@ write_lock = Lock()
 def check_assigments(course):
 	global tasks_done, tasks_all
 
-	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/assignment/index.php'),  p).read().decode('utf8', 'replace'))
-	
+	try:
+		doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/assign/index.php'),  p).read().decode('utf8', 'replace'))
+	except:
+		print 'failed:', course
+		return
+
 	table = doc.findAll('tr')
 	
 	if table:
@@ -98,11 +102,11 @@ def check_assigments(course):
 		for c in range(10):
 			field = table[0].find('th', 'c%d' % c)
 			if field:
-				if field.text.strip() in ['Name', 'Ime']:
+				if field.text.strip() in ['Assignments', 'Naloge']:
 					c_namefield = c
 				if field.text.strip() in ['Due date', 'Rok za oddajo']:
 					c_datefield = c
-				if field.text.strip() in ['Submitted', 'Oddano']:
+				if field.text.strip() in ['Submissions', 'Oddaje']:
 					c_submittedfield = c
 		
 		for assigment in table[1:]: # first is header
@@ -115,7 +119,7 @@ def check_assigments(course):
 						submittedfield = assigment.find('td', 'c%d' % c_submittedfield)
 						with write_lock:
 							if not submittedfield.find('span'): # if not already submitted
-								url = BASE_URL + '/mod/assignment/' + dict(namefield.a.attrs)['href']
+								url = BASE_URL + '/mod/assign/' + dict(namefield.a.attrs)['href']
 								tasks.append((date, course[0], namefield.a.text, url))
 							else:
 								tasks_done += 1
@@ -125,8 +129,12 @@ def check_assigments(course):
 def check_quizes(course):
 	global tasks_done, tasks_all
 
-	doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/quiz/index.php'),  p).read().decode('utf8', 'replace'))
-	
+	try:
+		doc = BeautifulSoup(o.open(course[1].replace('course/view.php', 'mod/quiz/index.php'),  p).read().decode('utf8', 'replace'))
+	except:
+		print 'failed:', course
+		return
+
 	table = doc.findAll('tr')
 	
 	if table:
